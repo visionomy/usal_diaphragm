@@ -1,0 +1,33 @@
+@echo off
+
+echo Starting make_us_movie
+
+REM Add ffmpeg to the path so that it can be found by Python
+REM SETLOCAL
+REM set OLDPATH=%PATH%
+REM setx PATH "%~dp0"\ffmpeg\bin;%PATH%
+
+if exist "%~dp0\..\src\usal_diaphragm\app\launch.py" (
+	set LAUNCH_CMD="%~dp0\..\venv\Scripts\python" "%~dp0\..\src\usal_diaphragm\app\launch.py"
+) else (
+	set LAUNCH_CMD="%~dp0\diaphragm.exe"
+)
+
+call %LAUNCH_CMD% ^
+--action show_2d_movie ^
+--ztrim 350 --ytrim 30 --show_mask ^
+--show_peaks --peaks_axis 0 --peaks grad2d --grad_threshold 12.0 ^
+--surface none ^
+--n_slices 10 --rate 6 ^
+%*
+REM --cartesian ^
+
+if "%ERRORLEVEL%" neq "0" (
+  pause
+) else (
+    echo Finished show_2d_movie
+)
+
+REM setx PATH %OLDPATH%
+REM set OLDPATH= 
+REM ENDLOCAL
