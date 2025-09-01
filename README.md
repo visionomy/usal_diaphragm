@@ -1,5 +1,6 @@
 # usal-diaphragm package
 
+[![Python application](https://github.com/visionomy/usal_diaphragm/actions/workflows/python-app.yml/badge.svg)](https://github.com/visionomy/usal_diaphragm/actions/workflows/python-app.yml)
 
 ## Aims
 
