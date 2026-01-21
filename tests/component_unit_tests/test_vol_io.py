@@ -18,56 +18,56 @@ def create_test_vol_file(filepath, n_frames=1):
 
         # Write dimensions
         fid.write(bytes.fromhex("00C00100"))
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("<Q", ni))
 
         fid.write(bytes.fromhex("00C00200"))
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("<Q", nj))
 
         fid.write(bytes.fromhex("00C00300"))
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("<Q", nk))
 
         # Write properties
         fid.write(bytes.fromhex("00C20100"))  # offset1
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("d", 1.5))
 
         fid.write(bytes.fromhex("00C20200"))  # offset2
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("d", -0.5))
 
         fid.write(bytes.fromhex("00C10100"))  # rad_res
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("d", 0.001))
 
         fid.write(bytes.fromhex("10002200"))  # cartesian_spacing
-        fid.write(struct.pack("<Q", 8))
+        fid.write(struct.pack("<L", 8))
         fid.write(struct.pack("d", 0.5))
 
         # Write angles
         theta_data = b"".join([struct.pack("d", 1.0 + i * 0.1) for i in range(nj)])
         fid.write(bytes.fromhex("00C30200"))  # theta_angles
-        fid.write(struct.pack("<Q", len(theta_data)))
+        fid.write(struct.pack("<L", len(theta_data)))
         fid.write(theta_data)
 
         phi_data = b"".join([struct.pack("d", 1.5 - i * 0.1) for i in range(nk)])
         fid.write(bytes.fromhex("00C30100"))  # phi_angles
-        fid.write(struct.pack("<Q", len(phi_data)))
+        fid.write(struct.pack("<L", len(phi_data)))
         fid.write(phi_data)
 
         # Write frame data
         frame_data = bytes([i % 256 for i in range(frame_size)])
         fid.write(bytes.fromhex("00D00100"))
-        fid.write(struct.pack("<Q", frame_size))
+        fid.write(struct.pack("<L", frame_size))
         fid.write(frame_data)
 
         # Write sequence data if multiple frames
         if n_frames > 1:
             seq_data = frame_data * n_frames
             fid.write(bytes.fromhex("00D60100"))
-            fid.write(struct.pack("<Q", len(seq_data)))
+            fid.write(struct.pack("<L", len(seq_data)))
             fid.write(seq_data)
 
 
@@ -204,40 +204,43 @@ def test_read_4d_vol_from_file():
             # Write dimensions
             for hex_code, val in [("00C00100", ni), ("00C00200", nj), ("00C00300", nk)]:
                 fid.write(bytes.fromhex(hex_code))
-                fid.write(struct.pack("<Q", 8))
+                fid.write(struct.pack("<L", 8))
                 fid.write(struct.pack("<Q", val))
 
             # Write minimal properties
             for hex_code, val in [("00C20100", 1.5), ("00C20200", -0.5),
                                    ("00C10100", 0.001), ("10002200", 0.5)]:
                 fid.write(bytes.fromhex(hex_code))
-                fid.write(struct.pack("<Q", 8))
+                fid.write(struct.pack("<L", 8))
                 fid.write(struct.pack("d", val))
 
             # Write angles
             theta_data = b"".join([struct.pack("d", 1.0 + i * 0.01) for i in range(nj)])
             fid.write(bytes.fromhex("00C30200"))
-            fid.write(struct.pack("<Q", len(theta_data)))
+            fid.write(struct.pack("<L", len(theta_data)))
             fid.write(theta_data)
 
             phi_data = b"".join([struct.pack("d", 1.5 - i * 0.01) for i in range(nk)])
             fid.write(bytes.fromhex("00C30100"))
-            fid.write(struct.pack("<Q", len(phi_data)))
+            fid.write(struct.pack("<L", len(phi_data)))
             fid.write(phi_data)
 
             # Write frame data
             frame_data = bytes([i % 256 for i in range(frame_size)])
             fid.write(bytes.fromhex("00D00100"))
-            fid.write(struct.pack("<Q", frame_size))
+            fid.write(struct.pack("<L", frame_size))
             fid.write(frame_data)
 
             # Write sequence
             seq_data = frame_data * n_frames
             fid.write(bytes.fromhex("00D60100"))
-            fid.write(struct.pack("<Q", len(seq_data)))
+            fid.write(struct.pack("<L", len(seq_data)))
             fid.write(seq_data)
 
-        vol_arrays, vol_props = read_4d_vol.read_4d_vol_from(filepath)
+        vol_arrays, vol_props = read_4d_vol.read_4d_vol_from(
+            filepath, 
+            min_file_size=0,
+        )
 
         assert vol_arrays is not None
         assert vol_props is not None

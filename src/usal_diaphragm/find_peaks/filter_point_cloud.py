@@ -57,4 +57,4 @@ def filter_isolated_points_from(ii, jj, kk, threshold=DEFAULT_DISTANCE_THRESHOLD
             filtered_jj.append(ijk_matrix[i, 1])
             filtered_kk.append(ijk_matrix[i, 2])
 
-    return filtered_ii, filtered_jj, filtered_kk
+    return np.array(filtered_ii), np.array(filtered_jj), np.array(filtered_kk)

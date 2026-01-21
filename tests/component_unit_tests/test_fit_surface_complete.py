@@ -188,7 +188,7 @@ def test_plane_fitting_validates_solution():
     n = 50
     x = np.random.rand(n) * 10
     y = np.random.rand(n) * 10
-    z = 2 * x + 3 * y + 5
+    z = -3*x - 3*y - 5
 
     args = get_mock_args(n_test=20)
     fitter = fit_surface.RansacPlane(args)

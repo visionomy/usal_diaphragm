@@ -11,7 +11,8 @@ MIN_4D_VOLUME_SIZE_MB = 100
 MIN_4D_VOLUME_SIZE_BYTES = MIN_4D_VOLUME_SIZE_MB * 1024 ** 2
 
 
-def read_4d_vol_from(full_source):
+def read_4d_vol_from(full_source, 
+                     min_file_size=MIN_4D_VOLUME_SIZE_BYTES):
     """
     Read a 4D ultrasound volume from a file or directory.
 
@@ -31,7 +32,7 @@ def read_4d_vol_from(full_source):
 
     # Try each reader in sequence
     for read_func in READ_FUNCS:
-        result = read_func(full_source)
+        result = read_func(full_source, min_file_size)
         if result is not None:
             vol_arrays_list, vol_props = result
             break
@@ -51,7 +52,7 @@ def read_4d_vol_from(full_source):
     return vol_arrays_list, vol_props
 
 
-def _frames_from_3d_vols(full_source):
+def _frames_from_3d_vols(full_source, min_file_size):
     """
     Get the sequence data from a directory of 3D volumes.
 
@@ -61,6 +62,8 @@ def _frames_from_3d_vols(full_source):
     Returns:
         Tuple of (vol_arrays_list, vol_props) or None if not a valid directory
     """
+    del min_file_size
+
     if not os.path.isdir(full_source):
         return None
 
@@ -95,7 +98,7 @@ def _frames_from_3d_vols(full_source):
     return vol_arrays_list, vol_props
 
 
-def _frames_from_4d_vol(full_source):
+def _frames_from_4d_vol(full_source, min_file_size):
     """
     Get the sequence data from a single 4D volume file.
 
@@ -110,7 +113,7 @@ def _frames_from_4d_vol(full_source):
 
     # Check file size threshold
     file_size = os.path.getsize(full_source)
-    if file_size <= MIN_4D_VOLUME_SIZE_BYTES:
+    if file_size <= min_file_size:
         print(f"Ignoring {full_source} because FileSize < {MIN_4D_VOLUME_SIZE_MB}MB")
         return None
 
