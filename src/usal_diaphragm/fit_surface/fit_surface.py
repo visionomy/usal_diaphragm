@@ -79,7 +79,7 @@ class _RansacFitterBase:
             # Keep looking for parameters until a valid guess is found
             # (usually on the first attempt).
             x_vec = None
-            while x_vec is None or x_vec[0] > -0.5:
+            while self._is_invalid(x_vec):
                 inds = np.argsort(self._rng.random(n))
                 x_vec = self._fit_surface_to(ijk[inds])
 
@@ -108,6 +108,9 @@ class _RansacFitterBase:
         return (
             best_x_vecs, scores_list, inliers_list
         )
+    
+    def _is_invalid(self, x_vec):
+        return x_vec is None
 
     def surface_from(self, ii, jj, kk, params_vec):
         """Return a set of surface points for given parameters"""
@@ -157,6 +160,12 @@ class RansacPlane(_RansacFitterBase):
             np.ones(len(ijk_mat)),
         ]).transpose()
 
+    def _is_invalid(self, x_vec):
+        return (
+            x_vec is None or 
+            x_vec[0] > -0.5
+        )
+    
 
 class RansacParabola(_RansacFitterBase):
 
