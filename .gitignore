@@ -1,0 +1,10 @@
+.venv
+.vscode
+*.pyc
+*.egg-info
+
+data
+doc
+
+.coverage
+coverage.xml
