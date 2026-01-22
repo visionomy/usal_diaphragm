@@ -1,13 +1,41 @@
-# usal-diaphragm package
+# usal_diaphragm package
 
 [![Python application](https://github.com/visionomy/usal_diaphragm/actions/workflows/python-app.yml/badge.svg)](https://github.com/visionomy/usal_diaphragm/actions/workflows/python-app.yml)
 
 ## Aims
 
-The purpose of this package is to process 4D (3D volume + time) ultrasound data to track movement of the diaphragm, parameterise the movement and distil this into one or two parameters that quantify diaphragm excursion.
+The purpose of this package is 
+to improve the diagnosis and treatment of impaired breathing
+by measuring diaphragm mobility from 4D (3D volume + time) ultrasound data.
 
+To quantify the movement of the diaphragm from ultrasound,
+we use image processing methods to track the diaphragm's position at every frame,
+parameterise the position and shape of the diaphragm in time, 
+and distilling this into one or two parameters that quantify dynamic diaphragm excursion.
 
-# Usage
+A more complete description of the study is in the published article 
+[Measuring diaphragmatic excursion using 4-dimensional ultrasound: a feasibility study](https://www.e-ultrasonography.org/journal/view.php?doi=10.14366/usg.25020) with 
+example data available from the corresponding [FigShare page](https://salford.figshare.com/articles/dataset/Measuring_diaphragmatic_excursion_using_4-Dimensional_Ultrasound_a_feasibility_study/29290757).
+
+### Citation
+
+```
+@article{handley2025,
+   author = {Handley, Adam and Preece, Stephen and Tresadern, Phil and Szczepura, Katy},
+   title = {Measuring diaphragmatic excursion using 4-dimensional ultrasound: a feasibility study},
+   journal = {Ultrasonography},
+   volume = {44},
+   number = {5},
+   pages = {400-407},
+   ISSN = {0950-0693},
+   DOI = {10.14366/usg.25020},
+   url = {[https://doi.org/10.14366/usg.25020]},
+   year = {2025},
+   type = {Technical Note},
+}
+```
+
+## Usage
 
 The package comes as a single executable (launch.exe) which is highly parameterised. Call
 
@@ -18,7 +46,7 @@ for a full list of parameters.
 To simplify matters, the package comes with several batch files that supply reasonable parameter values. You can drag & drop a .vol file onto the batch files in order to run the code on that file.
 
 
-## show_ultrasound_peaks.bat
+### show_ultrasound_peaks.bat
 
 The first script you should run in your pipeline is show_ultrasound_peaks.bat. This will compute points of interest within the volume (usually strong bands such as along the diaphragm) and superimpose them (in pink) on slices through the ultrasound volume. This is a useful diagnostic step to check that points along the diaphragm are being detected.
 
@@ -27,14 +55,14 @@ If points are not being detected, you may play around with the peak finder param
 It is unlikely that the software will be able to pick lots of points on the diaphragm without picking up a lot of peaks in the surrounding tissue, but there is some robustness to noise in later stages.
 
 
-## show_ultrasound_plane.bat
+### show_ultrasound_plane.bat
 
 When you are happy that sufficient points on the diaphragm are being detected, show_ultrasound_plane.bat will apply the same code but with the additional (and usually slower) step of looking for a plane through the volume that roughly lines up with the diaphragm. (The probe captures samples along rays that fan out from the centre of the probe, but stores the data as a rectangular volume. The result is that spherical surfaces in cartesian space are mapped approximately to planes in the rectangular space, so fitting a plane to the untransformed data is reasonable.)
 
 At each frame of the sequence, the "best" fitting plane to the detected peaks is overlaid in cyan, so you should be able to spot quite easily when the plane fitting has succeeded and when it has failed.
 
 
-## show_surfaces.bat
+### show_surfaces.bat
 
 When the plane fit is working well, show_surfaces.bat will give you an animated view of the detected peaks in 3D along with an approximation to the surface.
 
@@ -45,12 +73,12 @@ You can also choose to fit a spherical surface explicitly to the points that are
 In the right hand panel, you will see a visualization of the surface parameters (either of the 3D plane or the sphere) and their progression over time. This can sometimes be helpful in seeing the periodic motion of parameters that follows the breathing cycle. (It can also give you an idea of how much noise there is in the estimated parameters).
 
 
-## output_stats.bat
+### output_stats.bat
 
 Finally, to process the results for yourself you can use output_stats.bat to save surface points and parameters to .csv tables that you can read in to Excel (or similar), Matlab, etc.
 
 
-# Using a Config file
+## Using a Config file
 
 Because some settings with work well on one sequence while others work better on other sequences, you can run the program on a text config file that stores the name and path of the .vol file along with the settings you want to use on it.
 
@@ -69,13 +97,13 @@ For information on what settings do, run
 **Note that config options overwrite anything supplied at the command line.**
 
 
-# Processing Pipeline
+## Processing Pipeline
 
 First, a note of caution: many of these fitting methods use random sampling so the outputs will vary from run to run. For consistent outputs over time, you should set the *randseed* to a positive integer value before processing.
 
 The processing works via the following stages.
 
-## Peak detection
+### Peak detection
 
 Points of interest are detected either as maxima in the intensity of the sampled data or as maxima in the response to filters applied to the data (e.g., a gradient filter to pick up edges).
 
@@ -83,7 +111,7 @@ Filters can be convolved with the data in either 1D (along a ray) or in 2D (conv
 
 This process results in a discrete set of peaks for every 3D volume in the sequence.
 
-## Surface Fitting (rectangular)
+### Surface Fitting (rectangular)
 
 For every volume in the sequence, the software then looks for a plane that passes close to a large number of points in the set of detected peaks. This works via a process known as Random Sample Consensus (RanSaC) which randomly chooses a minimal set of points out of all candidates, computes the equation of the surface they uniquely define and then counts the number of other candidates that lie within some distance from that surface.
 
@@ -95,7 +123,7 @@ In our case, we use sets of three points since this many uniquely define a plane
 
 Because there can, at times, be lots of peaks along spurious edges (e.g., at the boundary of other tissues), we choose to keep the best K surfaces and try to resolve the conflict in the next step.
 
-## Parameter Path Estimation
+### Parameter Path Estimation
 
 Having estimated K potential surfaces (with a corresponding score) for every volume in the sequence, we then attempt to find a "path" through parameter space over the whole sequence that contains surfaces with large consensus but that also form a coherent sequence.
 
@@ -105,7 +133,7 @@ The balance between large consensus and agreement with neighbouring volumes is d
 
 (Note that this should not entail the risk of the parameters staying the same over the whole sequence because we're always choosing from candidates that have been suggested by the data. I.e., it is hard to oversmooth the sequence.)
 
-## Surface Fitting (cartesian)
+### Surface Fitting (cartesian)
 
 With a reasonable surface fit at every volume in the sequence, we can reparameterise from planar parameters in the rectangular coordinate frame to spherical parameters in the cartesian coordinate frame.
 
